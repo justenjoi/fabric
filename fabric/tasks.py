@@ -328,6 +328,11 @@ def execute(task, *args, **kwargs):
     # Normalize to Task instance if we ended up with a regular callable
     if not _is_task(task):
         task = WrappedCallableTask(task)
+
+    pre_run = getattr(task, 'pre_run', None)
+    if pre_run:
+        pre_run(task.__name__)
+
     # Filter out hosts/roles kwargs
     new_kwargs, hosts, roles, exclude_hosts = parse_kwargs(kwargs)
     # Set up host list
@@ -404,5 +409,9 @@ def execute(task, *args, **kwargs):
         with settings(**my_env):
             results['<local-only>'] = task.run(*args, **new_kwargs)
     # Return what we can from the inner task executions
+
+    post_run = getattr(task, 'post_run', None)
+    if post_run:
+        post_run(task.__name__)
 
     return results
